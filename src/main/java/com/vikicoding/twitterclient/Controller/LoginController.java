@@ -3,6 +3,7 @@ package com.vikicoding.twitterclient.Controller;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
@@ -12,11 +13,12 @@ import java.util.ResourceBundle;
 
 public class LoginController implements Initializable {
 
-    public TextField usernameTxt;
-    public TextField passwordTxt;
+
     public Label errLbl;
+    public TextField authPin;
     private boolean isLoggedIn = false;
-    private String asccessToken = "";
+    public String pin = "";
+//    private String acccessToken = "";
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -28,17 +30,14 @@ public class LoginController implements Initializable {
     }
 
     public void handleLogin(ActionEvent actionEvent) {
-        String username = usernameTxt.getText();
-        String password = passwordTxt.getText();
+        if(authPin.getText() != null) {
+            this.pin = authPin.getText();
+        } else
+            this.pin = "";
 
-        if(username.equals("admin") && password.equals("abc@123")) {
-            this.isLoggedIn = true;
-            Node source = (Node) actionEvent.getSource();
-            Stage stage = (Stage) source.getScene().getWindow();
-            stage.close();
-        } else {
-            errLbl.setText("Incorrect username of Password, Please try again !");
-        }
+        Parent source = (Parent) actionEvent.getSource();
+        Stage stage = (Stage) source.getScene().getWindow();
+        stage.close();
     }
 
     public boolean isLoggedIn() {
