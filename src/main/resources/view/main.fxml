@@ -6,6 +6,8 @@
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.ToolBar?>
@@ -14,6 +16,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
+<?import javafx.scene.control.cell.PropertyValueFactory?>
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.vikicoding.twitterclient.Controller.MainController">
    <top>
       <VBox prefHeight="3.0" prefWidth="600.0" BorderPane.alignment="CENTER">
@@ -65,21 +68,33 @@
                      </padding>
                   </HBox>
                </children></VBox>
-            <VBox prefHeight="200.0" prefWidth="100.0">
+            <VBox fx:id="centerVBox" prefHeight="200.0" prefWidth="100.0">
                <children>
-                  <ToolBar prefHeight="40.0" prefWidth="200.0">
+                  <ToolBar fx:id="centerToolBar">
                      <items>
-                        <AnchorPane prefWidth="220.0">
-                           <children>
-                              <TextField fx:id="searchTxt" prefWidth="222.0" promptText="Search" style="-fx-border-radius: 90;" AnchorPane.bottomAnchor="5.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                 <opaqueInsets>
-                                    <Insets right="1.0" />
-                                 </opaqueInsets>
-                              </TextField>
-                           </children>
-                        </AnchorPane>
+                        <TextField fx:id="searchTxt" prefHeight="26.0" promptText="Search" style="-fx-border-radius: 90;">
+                           <opaqueInsets>
+                              <Insets />
+                           </opaqueInsets>
+                        </TextField>
                      </items>
                   </ToolBar>
+                  <AnchorPane fx:id="centerAnchorPane" scaleShape="false">
+                     <children>
+                        <TableView fx:id="timelineTbl" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                          <columns>
+                            <TableColumn fx:id="userCol" prefWidth="75.0" text="User" >
+                              <cellValueFactory><PropertyValueFactory property="test_user" />
+                              </cellValueFactory>
+                            </TableColumn>
+                            <TableColumn fx:id="textCol" prefWidth="153.60003662109375" text="Tweet" >
+                                <cellValueFactory><PropertyValueFactory property="test_tweet" />
+                                </cellValueFactory>
+                            </TableColumn>
+                          </columns>
+                        </TableView>
+                     </children>
+                  </AnchorPane>
                </children>
             </VBox>
             <VBox prefHeight="200.0" prefWidth="100.0" />

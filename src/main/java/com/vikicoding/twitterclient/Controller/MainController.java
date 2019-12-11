@@ -1,15 +1,24 @@
 package com.vikicoding.twitterclient.Controller;
 
+import com.vikicoding.twitterclient.model.UserInf;
+import com.vikicoding.twitterclient.model.UserTimeline;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.TextArea;
+import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import twitter4j.Status;
 import twitter4j.Twitter;
 import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
@@ -18,6 +27,7 @@ import twitter4j.auth.RequestToken;
 
 import java.io.*;
 import java.net.URL;
+import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.ResourceBundle;
@@ -28,6 +38,19 @@ public class MainController implements Initializable {
     public TextArea newPostTxt;
     private final static String CONSUMER_KEY = "3qOgAvwC0lZ9CLILyM03Z2Eyz";
     private final static String CONSUMER_KEY_SECRET = "ZIsxJwtwnMAAZTQqDflC6RAMrV4hd6VGFEP2fHjiJS2ulMpWQ3";
+
+    public AnchorPane centerAnchorPane;
+    public ToolBar centerToolBar;
+    public VBox centerVBox;
+    public AnchorPane searchAnchorPane;
+    public TextField searchTxt;
+
+    public TableView<UserTimeline> timelineTbl;
+    public TableColumn<UserTimeline, UserInf> userCol;
+    public TableColumn<UserTimeline,String> textCol;
+    private final ObservableList<UserTimeline> data = FXCollections.observableArrayList();
+    private String tweetHandle,tweetText,tweetImage,tweetName;
+
     private AccessToken accessToken = null;
 
     private Twitter twitter;
@@ -35,6 +58,12 @@ public class MainController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
 
+        //Setup layout
+        centerAnchorPane.prefHeightProperty().bind(centerVBox.heightProperty());
+        centerAnchorPane.prefWidthProperty().bind(centerVBox.widthProperty());
+        searchTxt.prefWidthProperty().bind(centerToolBar.widthProperty().add(-16));
+
+        //Setup twitter
         twitter = new TwitterFactory().getInstance();
         twitter.setOAuthConsumer(CONSUMER_KEY, CONSUMER_KEY_SECRET);
         System.out.println("Testing initialisation");
@@ -79,6 +108,17 @@ public class MainController implements Initializable {
                 e.printStackTrace();
                 System.exit(1);
             }
+        }
+
+//        Table setup
+        setupTweetColumn();
+        setupUserColumn();
+//        After all authentication finished
+        try {
+            loadHomeTimeline();
+            timelineTbl.setItems(data);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -234,5 +274,67 @@ public class MainController implements Initializable {
         } else {
             return false;
         }
+    }
+
+    private void loadHomeTimeline () throws Exception{
+        List<Status> statuses = twitter.getHomeTimeline();
+        data.clear();
+        System.out.println("Number of loaded timeline status: "+statuses.size());
+        for (Status status : statuses) {
+
+            tweetName = status.getUser().getName();
+            tweetHandle="@"+status.getUser().getScreenName();
+            tweetText=status.getText();
+            tweetImage   =status.getUser().getProfileImageURL();
+
+            UserInf user = new UserInf(tweetName,tweetHandle,tweetImage);
+            UserTimeline timeline = new UserTimeline(tweetText, user);
+            System.out.println(timeline.getTest_tweet());
+            data.add(timeline);
+        }
+    }
+
+    private void setupUserColumn () {
+        userCol.setCellFactory((TableColumn<UserTimeline, UserInf> param) -> {
+            TableCell<UserTimeline, UserInf> cell = new TableCell<UserTimeline,UserInf>(){
+                @Override
+                public void updateItem(UserInf item, boolean empty) {
+                    if(item!=null){
+
+                        VBox vbox = new VBox();
+
+                        ImageView imageview = new ImageView();
+                        imageview.setFitHeight(40);
+                        imageview.setFitWidth(40);
+                        imageview.setImage(new Image(item.getImgUrl()));
+
+                        vbox.getChildren().add(new Label(item.getHandle()));
+                        vbox.getChildren().add(imageview);
+                        vbox.getChildren().add(new Label(item.getName()));
+                        vbox.setAlignment(Pos.CENTER);
+//                        vbox.getStyleClass().add("vboxTimeline");
+                        setGraphic(vbox);
+                    }
+                }
+            };
+            return cell;
+        });
+    }
+
+    private void setupTweetColumn () {
+        textCol.setCellFactory((TableColumn<UserTimeline, String> param) -> {
+            TableCell<UserTimeline, String> cell = new TableCell<UserTimeline,String>(){
+                private Text tweet;
+                @Override
+                public void updateItem(String item, boolean empty) {
+                    if (item != null) {
+                        tweet = new Text(item);
+                        tweet.setWrappingWidth(340);
+                        setGraphic(tweet);
+                    }
+                }
+            };
+            return cell;
+        });
     }
 }
