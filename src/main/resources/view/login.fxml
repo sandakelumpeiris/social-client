@@ -40,6 +40,6 @@
          </padding>
       </HBox>
       <Label fx:id="errLbl" alignment="CENTER" contentDisplay="CENTER" prefHeight="39.0" prefWidth="321.0" textAlignment="CENTER" textFill="RED" GridPane.columnSpan="2" GridPane.rowIndex="3" />
-      <Hyperlink text="Click Here to get auth pin" GridPane.columnSpan="2" />
+      <Hyperlink fx:id="authUrlLink" onAction="#handleAuthLink" text="Click Here to get auth pin for login" GridPane.columnSpan="2" />
    </children>
 </GridPane>
