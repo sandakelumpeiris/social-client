@@ -7,17 +7,17 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.InputMethodEvent;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -53,6 +53,10 @@ public class MainController implements Initializable {
     private String tweetHandle,tweetText,tweetImage,tweetName;
 
     public ListView<UserInf> followingList;
+    ObservableList<UserInf> followingData = FXCollections.observableArrayList();
+
+    public ListView<UserInf> followerList;
+    ObservableList<UserInf> followerData = FXCollections.observableArrayList();
 
     private AccessToken accessToken = null;
 
@@ -70,6 +74,8 @@ public class MainController implements Initializable {
         //        Table setup
         setupTweetColumn();
         setupUserColumn();
+        setupFollowingList();
+        setupFollowerList();
 
         //Setup twitter
         twitter = new TwitterFactory().getInstance();
@@ -119,14 +125,25 @@ public class MainController implements Initializable {
         }
 
 //        After all authentication finished
-        try {
-            loadHomeTimeline();
-            loadFollowers();
-            loadFollowings();
-            timelineTbl.setItems(data);
-        } catch (Exception e) {
-            e.printStackTrace();
+        boolean isLoading = true;
+
+        while (isLoading) {
+            try {
+                loadHomeTimeline();
+                loadFollowers();
+                loadFollowings();
+                timelineTbl.setItems(data);
+                followingList.setItems(followingData);
+                followerList.setItems(followerData);
+                isLoading = false;
+            } catch (Exception e) {
+                e.printStackTrace();
+                if(!confirmBox("Data loading failed !", "Loading data from twitter is failed due to "+e.getMessage()+". Would you like to try again !")) {
+                    System.exit(0);
+                }
+            }
         }
+
     }
 
     public void handleClear(ActionEvent actionEvent) {
@@ -302,29 +319,26 @@ public class MainController implements Initializable {
     }
 
     private void setupUserColumn () {
-        userCol.setCellFactory((TableColumn<UserTimeline, UserInf> param) -> {
-            TableCell<UserTimeline, UserInf> cell = new TableCell<UserTimeline,UserInf>(){
-                @Override
-                public void updateItem(UserInf item, boolean empty) {
-                    if(item!=null){
+        userCol.setCellFactory((TableColumn<UserTimeline, UserInf> param) -> new TableCell<UserTimeline,UserInf>(){
+            @Override
+            public void updateItem(UserInf item, boolean empty) {
+                if(item!=null){
 
-                        VBox vbox = new VBox();
+                    VBox vbox = new VBox();
 
-                        ImageView imageview = new ImageView();
-                        imageview.setFitHeight(40);
-                        imageview.setFitWidth(40);
-                        imageview.setImage(new Image(item.getImgUrl()));
+                    ImageView imageview = new ImageView();
+                    imageview.setFitHeight(40);
+                    imageview.setFitWidth(40);
+                    imageview.setImage(new Image(item.getImgUrl()));
 
-                        vbox.getChildren().add(new Label(item.getHandle()));
-                        vbox.getChildren().add(imageview);
-                        vbox.getChildren().add(new Label(item.getName()));
-                        vbox.setAlignment(Pos.CENTER);
+                    vbox.getChildren().add(new Label(item.getHandle()));
+                    vbox.getChildren().add(imageview);
+                    vbox.getChildren().add(new Label(item.getName()));
+                    vbox.setAlignment(Pos.CENTER);
 //                        vbox.getStyleClass().add("vboxTimeline");
-                        setGraphic(vbox);
-                    }
+                    setGraphic(vbox);
                 }
-            };
-            return cell;
+            }
         });
     }
 
@@ -406,7 +420,12 @@ public class MainController implements Initializable {
         List<User> followers = twitter.getFollowersList(twitter.getId(), -1);
         System.out.println("Number of followers: "+followers.size());
         for(User user: followers) {
-            System.out.println("user; " + user.getName());
+            tweetName = user.getName();
+            tweetHandle = "@" + user.getScreenName();
+            tweetImage = user.getProfileImageURL();
+
+            UserInf userInf = new UserInf(tweetName, tweetHandle, tweetImage);
+            followerData.add(userInf);
         }
     }
 
@@ -414,44 +433,125 @@ public class MainController implements Initializable {
         List<User> followers = twitter.getFriendsList(twitter.getId(), -1);
         System.out.println("Number of Friends: "+followers.size());
         for(User user: followers) {
-            System.out.println("user; " + user.getName()+"|"+user.getProfileImageURL());
+            tweetName = user.getName();
+            tweetHandle = "@" + user.getScreenName();
+            tweetImage = user.getProfileImageURL();
+
+            UserInf userInf = new UserInf(tweetName, tweetHandle, tweetImage);
+            followingData.add(userInf);
         }
     }
 
-//    public void setupFollowingList () {
-//        followingList.getCellFactory(new Callback<ListView<UserInf>, ListCell<UserInf>>(){
-//
-//            @Override
-//            public ListCell<UserInf> call(ListView<UserInf> p) {
-//
-//                ListCell<UserInf> cell = new ListCell<UserInf>(){
-//
-//                    @Override
-//                    protected void updateItem(UserInf t, boolean bln) {
-//                        super.updateItem(t, bln);
-//                        if (t != null) {
-//                            HBox hBox = new HBox();
-//                            VBox vBox = new VBox();
-//
-//                            vBox.getChildren().add(new Label(t.getName()));
-//                            vBox.getChildren().add(new Label(t.getHandle()));
-//
-//                            ImageView imageview = new ImageView();
-//                            imageview.setFitHeight(40);
-//                            imageview.setFitWidth(40);
-//                            imageview.setImage(new Image(t.getImgUrl()));
-//
-//                            hBox.getChildren().add(imageview);
-//                            hBox.getChildren().add(vBox);
-//
-//                            setGraphic(hBox);
-//                        }
-//                    }
-//
-//                };
-//
-//                return cell;
-//            }
-//        });
-//    }
+    public void setupFollowingList () {
+        followingList.setCellFactory(new Callback<ListView<UserInf>, ListCell<UserInf>>(){
+
+            @Override
+            public ListCell<UserInf> call(ListView<UserInf> p) {
+
+                return new ListCell<UserInf>(){
+
+                    @Override
+                    protected void updateItem(UserInf t, boolean bln) {
+                        super.updateItem(t, bln);
+                        if (t != null) {
+                            HBox hBox = new HBox();
+                            VBox vBox = new VBox();
+
+                            Label nameLbl = new Label(t.getName());
+                            nameLbl.setPadding(new Insets(0,0,0,10));
+                            nameLbl.setStyle("-fx-font-weight: bold");
+
+                            Label handleLbl = new Label(t.getHandle());
+                            handleLbl.setPadding(new Insets(0,0,0,10));
+                            handleLbl.setTextFill(Color.web("#0076a3"));
+
+                            vBox.getChildren().add(nameLbl);
+                            vBox.getChildren().add(handleLbl);
+
+                            ImageView imageview = new ImageView();
+                            imageview.setFitHeight(40);
+                            imageview.setFitWidth(40);
+                            imageview.setImage(new Image(t.getImgUrl()));
+
+                            hBox.getChildren().add(imageview);
+                            hBox.getChildren().add(vBox);
+
+                            setGraphic(hBox);
+                        }
+                    }
+
+                };
+            }
+        });
+    }
+
+    public void setupFollowerList () {
+        followerList.setCellFactory(new Callback<ListView<UserInf>, ListCell<UserInf>>(){
+
+            @Override
+            public ListCell<UserInf> call(ListView<UserInf> p) {
+
+                return new ListCell<UserInf>(){
+
+                    @Override
+                    protected void updateItem(UserInf t, boolean bln) {
+                        super.updateItem(t, bln);
+                        if (t != null) {
+                            HBox hBox = new HBox();
+                            VBox vBox = new VBox();
+
+                            Label nameLbl = new Label(t.getName());
+                            nameLbl.setPadding(new Insets(0,0,0,10));
+                            nameLbl.setStyle("-fx-font-weight: bold");
+
+                            Label handleLbl = new Label(t.getHandle());
+                            handleLbl.setPadding(new Insets(0,0,0,10));
+                            handleLbl.setTextFill(Color.web("#0076a3"));
+
+                            vBox.getChildren().add(nameLbl);
+                            vBox.getChildren().add(handleLbl);
+
+                            ImageView imageview = new ImageView();
+                            imageview.setFitHeight(40);
+                            imageview.setFitWidth(40);
+                            imageview.setImage(new Image(t.getImgUrl()));
+
+                            hBox.getChildren().add(imageview);
+                            hBox.getChildren().add(vBox);
+
+                            setGraphic(hBox);
+                        }
+                    }
+
+                };
+            }
+        });
+    }
+
+    public void loadProfileDetails(ActionEvent actionEvent) {
+
+        try {
+            long userId = twitter.getId();
+            User user = twitter.showUser(userId);
+            Stage profileStage = new Stage();
+            profileStage.initModality(Modality.APPLICATION_MODAL);
+
+            FXMLLoader loginLoader = new FXMLLoader(getClass().getResource("/view/profile.fxml"));
+            Parent loginParent = loginLoader.load();
+            ProfileController profileController = loginLoader.getController();
+            profileController.setUser(user);
+
+            profileStage.setTitle("Login");
+            profileStage.setScene(new Scene(loginParent, 600, 218));
+            profileStage.setResizable(false);
+            profileStage.showAndWait();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Loading  error");
+            alert.setHeaderText("Your profile loading failed");
+            alert.setContentText("Loading profile failed due to "+e.getMessage());
+            alert.showAndWait();
+        }
+    }
 }
