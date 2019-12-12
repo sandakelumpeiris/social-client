@@ -2,6 +2,8 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
@@ -11,12 +13,13 @@
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.control.cell.PropertyValueFactory?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
 
-<?import javafx.scene.control.cell.PropertyValueFactory?>
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.vikicoding.twitterclient.Controller.MainController">
    <top>
       <VBox prefHeight="3.0" prefWidth="600.0" BorderPane.alignment="CENTER">
@@ -53,10 +56,21 @@
       <Insets />
    </opaqueInsets>
    <center>
-      <SplitPane dividerPositions="0.3010033444816054, 0.7006688963210702" prefHeight="160.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+      <SplitPane dividerPositions="0.25, 0.75" prefHeight="160.0" prefWidth="200.0" BorderPane.alignment="CENTER">
          <items>
             <VBox prefHeight="200.0" prefWidth="100.0">
                <children>
+                  <Label text="Lets tweet," textFill="#200869">
+                     <font>
+                        <Font name="System Bold" size="13.0" />
+                     </font>
+                     <padding>
+                        <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
+                     </padding>
+                     <VBox.margin>
+                        <Insets />
+                     </VBox.margin>
+                  </Label>
                   <TextArea fx:id="newPostTxt" prefHeight="178.0" prefWidth="178.0" promptText="Write your idea to post..." />
                   <HBox alignment="TOP_RIGHT" spacing="5.0">
                      <children>
@@ -72,22 +86,24 @@
                <children>
                   <ToolBar fx:id="centerToolBar">
                      <items>
-                        <TextField fx:id="searchTxt" prefHeight="26.0" promptText="Search" style="-fx-border-radius: 90;">
+                        <TextField fx:id="searchTxt" prefHeight="26.0" prefWidth="95.0" promptText="Search" style="-fx-border-radius: 90;">
                            <opaqueInsets>
                               <Insets />
                            </opaqueInsets>
                         </TextField>
+                        <Button fx:id="searchBtn" mnemonicParsing="false" onAction="#handleSearchBtn" text="Search" />
+                        <Button fx:id="btnHome" mnemonicParsing="false" onAction="#handleHomeBtn" text="Home" />
                      </items>
                   </ToolBar>
                   <AnchorPane fx:id="centerAnchorPane" scaleShape="false">
                      <children>
                         <TableView fx:id="timelineTbl" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                           <columns>
-                            <TableColumn fx:id="userCol" prefWidth="75.0" text="User" >
+                            <TableColumn fx:id="userCol" prefWidth="75.0" text="User">
                               <cellValueFactory><PropertyValueFactory property="test_user" />
                               </cellValueFactory>
                             </TableColumn>
-                            <TableColumn fx:id="textCol" prefWidth="153.60003662109375" text="Tweet" >
+                            <TableColumn fx:id="textCol" prefWidth="153.60003662109375" text="Tweet">
                                 <cellValueFactory><PropertyValueFactory property="test_tweet" />
                                 </cellValueFactory>
                             </TableColumn>
@@ -97,7 +113,20 @@
                   </AnchorPane>
                </children>
             </VBox>
-            <VBox prefHeight="200.0" prefWidth="100.0" />
+            <VBox prefHeight="200.0" prefWidth="100.0">
+               <children>
+                  <Label text="Following" textFill="#200869">
+                     <font>
+                        <Font name="System Bold" size="13.0" />
+                     </font>
+                     <padding>
+                        <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
+                     </padding>
+                  </Label>
+                   <ListView fx:id="followingList" prefHeight="200.0" prefWidth="200.0" >
+
+                   </ListView>
+               </children></VBox>
          </items>
       </SplitPane>
    </center>

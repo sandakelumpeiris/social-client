@@ -13,15 +13,16 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.InputMethodEvent;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import twitter4j.Status;
-import twitter4j.Twitter;
-import twitter4j.TwitterException;
-import twitter4j.TwitterFactory;
+import javafx.util.Callback;
+import twitter4j.*;
 import twitter4j.auth.AccessToken;
 import twitter4j.auth.RequestToken;
 
@@ -51,6 +52,8 @@ public class MainController implements Initializable {
     private final ObservableList<UserTimeline> data = FXCollections.observableArrayList();
     private String tweetHandle,tweetText,tweetImage,tweetName;
 
+    public ListView<UserInf> followingList;
+
     private AccessToken accessToken = null;
 
     private Twitter twitter;
@@ -61,7 +64,12 @@ public class MainController implements Initializable {
         //Setup layout
         centerAnchorPane.prefHeightProperty().bind(centerVBox.heightProperty());
         centerAnchorPane.prefWidthProperty().bind(centerVBox.widthProperty());
-        searchTxt.prefWidthProperty().bind(centerToolBar.widthProperty().add(-16));
+        searchTxt.prefWidthProperty().bind(centerToolBar.widthProperty().add(-170));
+        textCol.prefWidthProperty().bind(timelineTbl.widthProperty().subtract(userCol.prefWidthProperty()));
+
+        //        Table setup
+        setupTweetColumn();
+        setupUserColumn();
 
         //Setup twitter
         twitter = new TwitterFactory().getInstance();
@@ -110,12 +118,11 @@ public class MainController implements Initializable {
             }
         }
 
-//        Table setup
-        setupTweetColumn();
-        setupUserColumn();
 //        After all authentication finished
         try {
             loadHomeTimeline();
+            loadFollowers();
+            loadFollowings();
             timelineTbl.setItems(data);
         } catch (Exception e) {
             e.printStackTrace();
@@ -289,7 +296,7 @@ public class MainController implements Initializable {
 
             UserInf user = new UserInf(tweetName,tweetHandle,tweetImage);
             UserTimeline timeline = new UserTimeline(tweetText, user);
-            System.out.println(timeline.getTest_tweet());
+
             data.add(timeline);
         }
     }
@@ -322,19 +329,129 @@ public class MainController implements Initializable {
     }
 
     private void setupTweetColumn () {
-        textCol.setCellFactory((TableColumn<UserTimeline, String> param) -> {
-            TableCell<UserTimeline, String> cell = new TableCell<UserTimeline,String>(){
-                private Text tweet;
-                @Override
-                public void updateItem(String item, boolean empty) {
-                    if (item != null) {
-                        tweet = new Text(item);
-                        tweet.setWrappingWidth(340);
-                        setGraphic(tweet);
-                    }
+        textCol.setCellFactory((TableColumn<UserTimeline, String> param) -> new TableCell<UserTimeline,String>(){
+            private Text tweet;
+            @Override
+            public void updateItem(String item, boolean empty) {
+                if (item != null) {
+                    tweet = new Text(item);
+                    tweet.setWrappingWidth(340);
+                    setGraphic(tweet);
                 }
-            };
-            return cell;
+            }
         });
     }
+
+    public void handleSearch() {
+
+        System.out.println("Search Triggered");
+        String searchedTxt = searchTxt.getText();
+        if(searchedTxt == null || searchedTxt.equals("")) {
+            try {
+                loadHomeTimeline();
+            } catch (Exception e) {
+                e.printStackTrace();
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Loading timeline Error");
+                alert.setHeaderText("You new status update failed");
+                alert.setContentText("Loading timeline failed due to "+e.getMessage());
+                alert.showAndWait();
+            }
+        } else {
+            try {
+                Query query = new Query(searchedTxt);
+                query.setCount(15);
+                QueryResult result = twitter.search(query);
+                data.clear();
+                for (Status status : result.getTweets()) {
+                    tweetName = status.getUser().getName();
+                    tweetHandle="@"+status.getUser().getScreenName();
+                    tweetText=status.getText();
+                    tweetImage   =status.getUser().getProfileImageURL();
+
+                    UserInf user = new UserInf(tweetName,tweetHandle,tweetImage);
+                    UserTimeline timeline = new UserTimeline(tweetText, user);
+
+                    data.add(timeline);
+                }
+            } catch (TwitterException e) {
+                e.printStackTrace();
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Loading timeline Error");
+                alert.setHeaderText("You new status update failed");
+                alert.setContentText("Loading result failed due to "+e.getMessage());
+                alert.showAndWait();
+            }
+        }
+    }
+
+    public void handleSearchBtn(ActionEvent actionEvent) {
+        handleSearch();
+    }
+
+    public void handleHomeBtn(ActionEvent actionEvent) {
+        try {
+            loadHomeTimeline();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Loading timeline Error");
+            alert.setHeaderText("You new status update failed");
+            alert.setContentText("Loading timeline failed due to "+e.getMessage());
+            alert.showAndWait();
+        }
+    }
+
+    private void loadFollowers() throws Exception{
+        List<User> followers = twitter.getFollowersList(twitter.getId(), -1);
+        System.out.println("Number of followers: "+followers.size());
+        for(User user: followers) {
+            System.out.println("user; " + user.getName());
+        }
+    }
+
+    private void loadFollowings() throws Exception{
+        List<User> followers = twitter.getFriendsList(twitter.getId(), -1);
+        System.out.println("Number of Friends: "+followers.size());
+        for(User user: followers) {
+            System.out.println("user; " + user.getName()+"|"+user.getProfileImageURL());
+        }
+    }
+
+//    public void setupFollowingList () {
+//        followingList.getCellFactory(new Callback<ListView<UserInf>, ListCell<UserInf>>(){
+//
+//            @Override
+//            public ListCell<UserInf> call(ListView<UserInf> p) {
+//
+//                ListCell<UserInf> cell = new ListCell<UserInf>(){
+//
+//                    @Override
+//                    protected void updateItem(UserInf t, boolean bln) {
+//                        super.updateItem(t, bln);
+//                        if (t != null) {
+//                            HBox hBox = new HBox();
+//                            VBox vBox = new VBox();
+//
+//                            vBox.getChildren().add(new Label(t.getName()));
+//                            vBox.getChildren().add(new Label(t.getHandle()));
+//
+//                            ImageView imageview = new ImageView();
+//                            imageview.setFitHeight(40);
+//                            imageview.setFitWidth(40);
+//                            imageview.setImage(new Image(t.getImgUrl()));
+//
+//                            hBox.getChildren().add(imageview);
+//                            hBox.getChildren().add(vBox);
+//
+//                            setGraphic(hBox);
+//                        }
+//                    }
+//
+//                };
+//
+//                return cell;
+//            }
+//        });
+//    }
 }
